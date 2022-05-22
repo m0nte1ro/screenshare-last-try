@@ -18,7 +18,10 @@ app.get('/:sala', (req, res) => {
 io.on('connection', socket => {
     socket.on('entrar-sala', (salaId, userId) => {
         socket.join(salaId);
-        socket.to(salaId).emit('user-connected', userId);
+        socket.on('ready', ()=>{
+            socket.to(salaId).emit('user-connected', userId);
+        })
+        
 
         socket.on('disconnect', () => {
             socket.to(salaId).emit('user-disconnected', userId);
