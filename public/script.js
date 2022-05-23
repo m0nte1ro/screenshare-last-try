@@ -11,32 +11,43 @@ navigator.mediaDevices.getDisplayMedia({
 }).then(stream => {
     const myPeer = new Peer(undefined, {
         host: '/',
-        port: '8101'
+        port: '8100',
+	secure: true,
+	debug:3,
+	path: '/peerjs'
     })
+    
+    console.log("Peer:")
+    console.log(myPeer);
 
     myPeer.on('open', id => {
+	console.log("MyPeer abriu: " + id + ".\nSala ID: " + SALA_ID);
         socket.emit('entrar-sala', SALA_ID, id);
     })
    
     addVideoStream(myVideo, stream);
 
-    socket.on('user-connected', userId => {
-        connectToNewUser(userId, stream, myPeer);
-    });
 
     myPeer.on('call', call => {
+	console.log("Recebida chamada. Mais info: V");
+	console.log(call);
         call.answer(stream);
         const video = document.createElement('video');
         call.on('stream', userVideoStream => {
+	    console.log("Entrei no call on Stream PAPI :3")
             addVideoStream(video, userVideoStream);
         })
-        socket.emit('ready');
-    })
+   });
+    socket.on('user-connected', userId => {
+            console.log("New user connected" + userId);
+            connectToNewUser(userId, stream, myPeer);
+        });
 
     
 });
 
 socket.on('user-disconnected', userId => {
+    console.log("-> O user: " + userId + " bazou mesmo de vez :(")
     if(peers[userId]) peers[userId].close();
 })
 
@@ -52,6 +63,7 @@ function addVideoStream(video, stream){
 
 function connectToNewUser(userId, stream, peer){
     const call = peer.call(userId, stream);
+    console.log("--> O connect to new user diz que vem aí o " + userId);
     const video = document.createElement('video');
     call.on('stream', userVideoStream => {
         addVideoStream(video, userVideoStream);
